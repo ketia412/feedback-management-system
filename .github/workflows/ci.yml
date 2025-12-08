@@ -7,57 +7,79 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
     
-    - name: Set up Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-        cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci
+      run: npm install
     
     - name: Run tests
       run: npm test
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage/
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: npm install
     
     - name: Build Docker image
-      run: |
-        docker build -t feedback-app:${{ github.sha }} .
-        docker tag feedback-app:${{ github.sha }} feedback-app:latest
+      run: docker build -t feedback-app:latest .
     
     - name: Test Docker image
       run: |
         docker run -d -p 3000:3000 --name test-container feedback-app:latest
         sleep 5
-        curl --fail http://localhost:3000/health || exit 1
+        curl http://localhost:3000/health
         docker stop test-container
         docker rm test-container
     
-    - name: Check image size
-      run: |
-        IMAGE_SIZE=$(docker images feedback-app:latest --format "{{.Size}}")
-        echo "Docker image size: $IMAGE_SIZE"
-    
     - name: Login to Docker Hub
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/main'
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: Push to Docker Hub
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/main'
       run: |
         docker tag feedback-app:latest ${{ secrets.DOCKER_USERNAME }}/feedback-app:latest
-        docker tag feedback-app:latest ${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ github.sha }}
         docker push ${{ secrets.DOCKER_USERNAME }}/feedback-app:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ github.sha }}
+
+  notify:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Send notification
+      run: |
+        if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.build.result }}" == "success" ]; then
+          echo "✅ All tests passed and build successful!"
+        else
+          echo "❌ Tests or build failed!"
+          exit 1
+        fi
