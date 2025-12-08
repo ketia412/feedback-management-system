@@ -1,0 +1,63 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build Docker image
+      run: |
+        docker build -t feedback-app:${{ github.sha }} .
+        docker tag feedback-app:${{ github.sha }} feedback-app:latest
+    
+    - name: Test Docker image
+      run: |
+        docker run -d -p 3000:3000 --name test-container feedback-app:latest
+        sleep 5
+        curl --fail http://localhost:3000/health || exit 1
+        docker stop test-container
+        docker rm test-container
+    
+    - name: Check image size
+      run: |
+        IMAGE_SIZE=$(docker images feedback-app:latest --format "{{.Size}}")
+        echo "Docker image size: $IMAGE_SIZE"
+    
+    - name: Login to Docker Hub
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Push to Docker Hub
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        docker tag feedback-app:latest ${{ secrets.DOCKER_USERNAME }}/feedback-app:latest
+        docker tag feedback-app:latest ${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ github.sha }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/feedback-app:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ github.sha }}
