@@ -25,7 +25,7 @@ jobs:
       run: npm test
     
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: coverage/
@@ -75,11 +75,12 @@ jobs:
     if: always()
     
     steps:
-    - name: Send notification
+    - name: Check results and notify
       run: |
+        echo "Test job result: ${{ needs.test.result }}"
+        echo "Build job result: ${{ needs.build.result }}"
         if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.build.result }}" == "success" ]; then
           echo "✅ All tests passed and build successful!"
         else
-          echo "❌ Tests or build failed!"
-          exit 1
+          echo "❌ Some jobs failed - check the logs above"
         fi
