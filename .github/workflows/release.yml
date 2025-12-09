@@ -1,0 +1,75 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Build Docker image with version tag
+      run: |
+        docker build -t feedback-app:${{ steps.get_version.outputs.VERSION }} .
+        docker tag feedback-app:${{ steps.get_version.outputs.VERSION }} feedback-app:latest
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Push versioned image to Docker Hub
+      run: |
+        docker tag feedback-app:${{ steps.get_version.outputs.VERSION }} ${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ steps.get_version.outputs.VERSION }}
+        docker tag feedback-app:${{ steps.get_version.outputs.VERSION }} ${{ secrets.DOCKER_USERNAME }}/feedback-app:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ steps.get_version.outputs.VERSION }}
+        docker push ${{ secrets.DOCKER_USERNAME }}/feedback-app:latest
+    
+    - name: Create Release Notes
+      run: |
+        echo "## Release v${{ steps.get_version.outputs.VERSION }}" > release-notes.md
+        echo "" >> release-notes.md
+        echo "### Docker Images" >> release-notes.md
+        echo "- \`${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ steps.get_version.outputs.VERSION }}\`" >> release-notes.md
+        echo "- \`${{ secrets.DOCKER_USERNAME }}/feedback-app:latest\`" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "### Pull Image" >> release-notes.md
+        echo "\`\`\`bash" >> release-notes.md
+        echo "docker pull ${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ steps.get_version.outputs.VERSION }}" >> release-notes.md
+        echo "\`\`\`" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "### Run Container" >> release-notes.md
+        echo "\`\`\`bash" >> release-notes.md
+        echo "docker run -d -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/feedback-app:${{ steps.get_version.outputs.VERSION }}" >> release-notes.md
+        echo "\`\`\`" >> release-notes.md
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.get_version.outputs.VERSION }}
+        release_name: Release v${{ steps.get_version.outputs.VERSION }}
+        body_path: release-notes.md
+        draft: false
+        prerelease: false
