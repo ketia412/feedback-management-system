@@ -27,4 +27,4 @@ build/
 
 # Coverage
 coverage/
-.nyc_output/
+.nyc_output/minikube-linux-amd64
