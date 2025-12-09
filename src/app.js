@@ -1,8 +1,16 @@
 const express = require('express');
+const { trackRequest, trackFeedback, getMetrics } = require('./metrics');
+
 const app = express();
 
 // Middleware
 app.use(express.json());
+
+// Track all requests
+app.use((req, res, next) => {
+  trackRequest();
+  next();
+});
 
 // In-memory storage
 let feedbacks = [];
@@ -10,16 +18,22 @@ let nextId = 1;
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
 });
 
+// Metrics endpoint for Prometheus
+app.get('/metrics', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.send(getMetrics());
+});
+
 // Get all feedback
 app.get('/api/feedback', (req, res) => {
-  res.status(200).json({
+  res.json({
     success: true,
     count: feedbacks.length,
     data: feedbacks
@@ -28,8 +42,7 @@ app.get('/api/feedback', (req, res) => {
 
 // Get feedback by ID
 app.get('/api/feedback/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const feedback = feedbacks.find(f => f.id === id);
+  const feedback = feedbacks.find(f => f.id === parseInt(req.params.id));
   
   if (!feedback) {
     return res.status(404).json({
@@ -38,7 +51,7 @@ app.get('/api/feedback/:id', (req, res) => {
     });
   }
   
-  res.status(200).json({
+  res.json({
     success: true,
     data: feedback
   });
@@ -49,14 +62,14 @@ app.post('/api/feedback', (req, res) => {
   const { name, email, message, rating } = req.body;
   
   // Validation
-  if (!name || !email || !message) {
+  if (!name || !email || !message || !rating) {
     return res.status(400).json({
       success: false,
-      message: 'Please provide name, email, and message'
+      message: 'All fields are required'
     });
   }
   
-  if (rating && (rating < 1 || rating > 5)) {
+  if (rating < 1 || rating > 5) {
     return res.status(400).json({
       success: false,
       message: 'Rating must be between 1 and 5'
@@ -68,11 +81,12 @@ app.post('/api/feedback', (req, res) => {
     name,
     email,
     message,
-    rating: rating || null,
+    rating: parseInt(rating),
     createdAt: new Date().toISOString()
   };
   
   feedbacks.push(feedback);
+  trackFeedback(); // Track feedback submission
   
   res.status(201).json({
     success: true,
