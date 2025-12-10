@@ -1,0 +1,34 @@
+groups:
+  - name: availability.rules
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{status!~"2.."}[5m])
+            / rate(http_requests_total[5m]) > 0.001
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "High error rate (>0.1%)"
+          description: "Error budget burn: {{ $value | humanizePercentage }} over 5m"
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))
+            > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency (p95 > 200ms)"
+          description: "p95 latency above 200ms for 5 minutes"
+
+      - alert: InstanceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "Instance down"
+          description: "{{ $labels.instance }} is not scraping"
+

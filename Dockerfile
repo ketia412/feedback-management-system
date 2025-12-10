@@ -26,5 +26,9 @@ COPY --from=builder /app /app
 EXPOSE 3000
 USER nodejs
 
+# Container health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
 # Start app
 CMD ["node", "src/server.js"]
