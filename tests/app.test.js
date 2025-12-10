@@ -86,7 +86,7 @@ describe('Feedback Management System - Integration Tests', () => {
       expect(res.body.message).toContain('Rating must be between 1 and 5');
     });
 
-    it.skip('should accept feedback without rating', async () => {
+    it('should accept feedback without rating', async () => {
       const res = await request(app)
         .post('/api/feedback')
         .send({

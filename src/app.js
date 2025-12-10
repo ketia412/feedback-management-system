@@ -70,19 +70,23 @@ app.get('/api/feedback/:id', (req, res) => {
 app.post('/api/feedback', (req, res) => {
   const { name, email, message, rating } = req.body;
   
-  // Validation
-  if (!name || !email || !message || !rating) {
+  // Validation - name, email, and message are required; rating is optional
+  if (!name || !email || !message) {
     return res.status(400).json({
       success: false,
       message: 'All fields are required'
     });
   }
   
-  if (rating < 1 || rating > 5) {
-    return res.status(400).json({
-      success: false,
-      message: 'Rating must be between 1 and 5'
-    });
+  // Validate rating if provided
+  if (rating !== undefined && rating !== null) {
+    const ratingNum = parseInt(rating);
+    if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rating must be between 1 and 5'
+      });
+    }
   }
   
   const feedback = {
@@ -90,7 +94,7 @@ app.post('/api/feedback', (req, res) => {
     name,
     email,
     message,
-    rating: parseInt(rating),
+    rating: rating !== undefined && rating !== null ? parseInt(rating) : null,
     createdAt: new Date().toISOString()
   };
   
