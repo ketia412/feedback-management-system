@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     
     steps:
     - uses: actions/checkout@v3
@@ -38,6 +39,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: success()
+    timeout-minutes: 15
     
     steps:
     - uses: actions/checkout@v3
@@ -65,22 +67,34 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         load: true
+        platforms: linux/amd64
     
     - name: Test Docker image
       run: |
-        docker run -d -p 3000:3000 --name test-container feedback-app:latest
-        sleep 10
-        curl --retry 5 --retry-delay 2 --fail http://localhost:3000/health || exit 1
-        docker stop test-container
-        docker rm test-container
+        set -e
+        docker run -d -p 3000:3000 --name test-container feedback-app:latest || true
+        sleep 15
+        curl --retry 10 --retry-delay 3 --retry-connrefused --fail http://localhost:3000/health || (docker logs test-container && exit 1)
+        docker stop test-container || true
+        docker rm test-container || true
     
     - name: Tag and push to Docker Hub
       if: github.ref == 'refs/heads/main' && success()
       run: |
+        set -e
+        echo "Tagging images..."
         docker tag feedback-app:latest ${{ secrets.DOCKER_USERNAME }}/feedback-app:latest
         docker tag feedback-app:latest ${{ secrets.DOCKER_USERNAME }}/feedback-app:1.0.0
+        echo "Pushing images to Docker Hub..."
         docker push ${{ secrets.DOCKER_USERNAME }}/feedback-app:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/feedback-app:1.0.0
+        echo "✅ Successfully pushed images to Docker Hub"
+    
+    - name: Cleanup Docker containers
+      if: always()
+      run: |
+        docker ps -aq --filter "name=test-container" | xargs -r docker rm -f || true
+        docker system prune -f || true
 
   notify:
     needs: [test, build]
