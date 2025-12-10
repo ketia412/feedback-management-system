@@ -141,12 +141,8 @@ describe('Feedback Management System - Integration Tests', () => {
   });
 
   describe('Error handler', () => {
-    // Inject a test-only route to trigger the error middleware
-    app.get('/error-trigger', () => {
-      throw new Error('Boom');
-    });
-
     it('should return 500 when an error is thrown', async () => {
+      // The /error-trigger route is defined in app.js when NODE_ENV === 'test'
       const res = await request(app).get('/error-trigger');
       expect(res.statusCode).toBe(500);
       expect(res.body).toHaveProperty('success', false);
