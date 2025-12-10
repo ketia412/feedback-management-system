@@ -104,6 +104,13 @@ app.post('/api/feedback', (req, res) => {
   });
 });
 
+// Test-only route to exercise error handler
+if (process.env.NODE_ENV === 'test') {
+  app.get('/error-trigger', () => {
+    throw new Error('Boom');
+  });
+}
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
