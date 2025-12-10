@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: feedback-app
-        image: ketia412/feedback-app:1.0.0
+        image: ketia412/feedback-app:1.2.0
         ports:
         - containerPort: 3000
         resources:
