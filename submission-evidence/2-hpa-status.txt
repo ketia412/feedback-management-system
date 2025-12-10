@@ -1,0 +1,2 @@
+NAME               REFERENCE                 TARGETS                        MINPODS   MAXPODS   REPLICAS   AGE
+feedback-app-hpa   Deployment/feedback-app   cpu: 6%/50%, memory: 57%/70%   2         10        2          10h

@@ -1,0 +1,20 @@
+
+> feedback-management-system@1.0.0 test
+> jest --coverage
+
+PASS tests/unit.test.js (12.503 s)
+PASS tests/app.test.js (45.154 s)
+------------|---------|----------|---------|---------|-------------------
+File        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+------------|---------|----------|---------|---------|-------------------
+All files   |   86.95 |      100 |      75 |   86.66 |                   
+ app.js     |   89.47 |      100 |   77.77 |   89.18 | 30-31,108-109     
+ metrics.js |      75 |      100 |   66.66 |      75 | 15-16             
+------------|---------|----------|---------|---------|-------------------
+Jest: "global" coverage threshold for functions (80%) not met: 75%
+
+Test Suites: 2 passed, 2 total
+Tests:       1 skipped, 12 passed, 13 total
+Snapshots:   0 total
+Time:        53.843 s
+Ran all test suites.

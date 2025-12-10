@@ -1,0 +1,20 @@
+NAME                                READY   STATUS    RESTARTS       AGE
+pod/feedback-app-58c7fff6f9-fmskn   1/1     Running   1 (3m4s ago)   10h
+pod/feedback-app-58c7fff6f9-jgfj8   1/1     Running   3 (3m4s ago)   11h
+
+NAME                       TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/feedback-service   NodePort   10.102.249.72   <none>        80:30080/TCP   12h
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/feedback-app   2/2     2            2           12h
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/feedback-app-58c7fff6f9   2         2         2       11h
+replicaset.apps/feedback-app-58cf5c85f8   0         0         0       12h
+replicaset.apps/feedback-app-5d9fd97bf    0         0         0       11h
+replicaset.apps/feedback-app-757b8dd6c7   0         0         0       11h
+replicaset.apps/feedback-app-847df96b44   0         0         0       12h
+replicaset.apps/feedback-app-c57ff98cf    0         0         0       12h
+
+NAME                                                   REFERENCE                 TARGETS                        MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/feedback-app-hpa   Deployment/feedback-app   cpu: 6%/50%, memory: 57%/70%   2         10        2          10h

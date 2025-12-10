@@ -1,0 +1,3 @@
+NAME                            CPU(cores)   MEMORY(bytes)   
+feedback-app-58c7fff6f9-fmskn   6m           70Mi            
+feedback-app-58c7fff6f9-jgfj8   7m           77Mi            

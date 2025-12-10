@@ -1,0 +1,180 @@
+=== KUBERNETES RESOURCES ===
+NAME                                READY   STATUS    RESTARTS       AGE
+pod/feedback-app-58c7fff6f9-fmskn   1/1     Running   1 (3m1s ago)   10h
+pod/feedback-app-58c7fff6f9-jgfj8   1/1     Running   3 (3m1s ago)   11h
+
+NAME                       TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/feedback-service   NodePort   10.102.249.72   <none>        80:30080/TCP   12h
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/feedback-app   2/2     2            2           12h
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/feedback-app-58c7fff6f9   2         2         2       11h
+replicaset.apps/feedback-app-58cf5c85f8   0         0         0       12h
+replicaset.apps/feedback-app-5d9fd97bf    0         0         0       11h
+replicaset.apps/feedback-app-757b8dd6c7   0         0         0       11h
+replicaset.apps/feedback-app-847df96b44   0         0         0       12h
+replicaset.apps/feedback-app-c57ff98cf    0         0         0       12h
+
+NAME                                                   REFERENCE                 TARGETS                        MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/feedback-app-hpa   Deployment/feedback-app   cpu: 6%/50%, memory: 57%/70%   2         10        2          10h
+
+=== HPA STATUS ===
+NAME               REFERENCE                 TARGETS                        MINPODS   MAXPODS   REPLICAS   AGE
+feedback-app-hpa   Deployment/feedback-app   cpu: 6%/50%, memory: 57%/70%   2         10        2          10h
+
+Name:                                                     feedback-app-hpa
+Namespace:                                                feedback-system
+Labels:                                                   <none>
+Annotations:                                              <none>
+CreationTimestamp:                                        Tue, 09 Dec 2025 23:18:42 +0200
+Reference:                                                Deployment/feedback-app
+Metrics:                                                  ( current / target )
+  resource cpu on pods  (as a percentage of request):     6% (6m) / 50%
+  resource memory on pods  (as a percentage of request):  57% (77772800) / 70%
+Min replicas:                                             2
+Max replicas:                                             10
+Behavior:
+  Scale Up:
+    Stabilization Window: 0 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Percent  Value: 100  Period: 30 seconds
+      - Type: Pods     Value: 2    Period: 30 seconds
+  Scale Down:
+    Stabilization Window: 60 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Percent  Value: 50  Period: 60 seconds
+Deployment pods:       2 current / 2 desired
+Conditions:
+  Type            Status  Reason              Message
+  ----            ------  ------              -------
+  AbleToScale     True    ReadyForNewScale    recommended size matches current size
+  ScalingActive   True    ValidMetricFound    the HPA was able to successfully calculate a replica count from memory resource utilization (percentage of request)
+  ScalingLimited  False   DesiredWithinRange  the desired count is within the acceptable range
+Events:
+  Type     Reason                        Age                 From                       Message
+  ----     ------                        ----                ----                       -------
+  Normal   SuccessfulRescale             10h                 horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+  Warning  FailedGetResourceMetric       10h                 horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       10h                 horizontal-pod-autoscaler  failed to get memory utilization: unable to get metrics for resource memory: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  10h                 horizontal-pod-autoscaler  invalid metrics (2 invalid out of 2), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       10h (x3 over 10h)   horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+  Warning  FailedGetResourceMetric       10h (x3 over 10h)   horizontal-pod-autoscaler  failed to get memory utilization: unable to get metrics for resource memory: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+  Warning  FailedComputeMetricsReplicas  10h (x3 over 10h)   horizontal-pod-autoscaler  invalid metrics (2 invalid out of 2), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: unable to fetch metrics from resource metrics API: the server is currently unable to handle the request (get pods.metrics.k8s.io)
+  Normal   SuccessfulRescale             10h                 horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             10h                 horizontal-pod-autoscaler  New size: 7; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             10h                 horizontal-pod-autoscaler  New size: 5; reason: All metrics below target
+  Normal   SuccessfulRescale             10h                 horizontal-pod-autoscaler  New size: 3; reason: All metrics below target
+  Normal   SuccessfulRescale             10h                 horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+  Warning  FailedGetResourceMetric       95s (x3 over 2m7s)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       95s (x3 over 2m7s)  horizontal-pod-autoscaler  failed to get memory utilization: unable to get metrics for resource memory: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  95s (x3 over 2m7s)  horizontal-pod-autoscaler  invalid metrics (2 invalid out of 2), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+
+=== POD METRICS ===
+NAME       CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
+minikube   292m         2%       1054Mi          13%         
+
+NAME                            CPU(cores)   MEMORY(bytes)   
+feedback-app-58c7fff6f9-fmskn   6m           70Mi            
+feedback-app-58c7fff6f9-jgfj8   7m           77Mi            
+
+=== MONITORING PODS ===
+NAME                          READY   STATUS    RESTARTS       AGE
+grafana-76498d5cf-cxsh4       1/1     Running   2 (3m2s ago)   11h
+prometheus-84d9cb6f4c-l4lkk   1/1     Running   2 (3m2s ago)   11h
+
+=== DOCKER IMAGES ===
+ketia412/feedback-app                           1.2.0      11e03e06db5c   11 hours ago    130MB
+ketia412/feedback-app                           1.0.0      268ee91c2142   12 hours ago    130MB
+
+=== DEPLOYMENT DETAILS ===
+Name:                   feedback-app
+Namespace:              feedback-system
+CreationTimestamp:      Tue, 09 Dec 2025 21:20:51 +0200
+Labels:                 app=feedback-app
+Annotations:            deployment.kubernetes.io/revision: 6
+Selector:               app=feedback-app
+Replicas:               2 desired | 2 updated | 2 total | 2 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  1 max unavailable, 1 max surge
+Pod Template:
+  Labels:       app=feedback-app
+  Annotations:  kubectl.kubernetes.io/restartedAt: 2025-12-09T21:23:27+02:00
+                prometheus.io/path: /metrics
+                prometheus.io/port: 3000
+                prometheus.io/scrape: true
+  Containers:
+   feedback-app:
+    Image:      ketia412/feedback-app:1.2.0
+    Port:       3000/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     200m
+      memory:  256Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:3000/health delay=10s timeout=1s period=10s #success=1 #failure=3
+    Readiness:  http-get http://:3000/health delay=5s timeout=1s period=5s #success=1 #failure=3
+    Environment:
+      NODE_ENV:    production
+      PORT:        3000
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Progressing    True    NewReplicaSetAvailable
+  Available      True    MinimumReplicasAvailable
+OldReplicaSets:  feedback-app-58cf5c85f8 (0/0 replicas created), feedback-app-847df96b44 (0/0 replicas created), feedback-app-c57ff98cf (0/0 replicas created), feedback-app-757b8dd6c7 (0/0 replicas created), feedback-app-5d9fd97bf (0/0 replicas created)
+NewReplicaSet:   feedback-app-58c7fff6f9 (2/2 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled up replica set feedback-app-757b8dd6c7 to 1
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled down replica set feedback-app-c57ff98cf to 2 from 3
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled up replica set feedback-app-757b8dd6c7 to 2 from 1
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled down replica set feedback-app-757b8dd6c7 to 0 from 2
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled up replica set feedback-app-5d9fd97bf to 2 from 0
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled down replica set feedback-app-c57ff98cf to 1 from 2
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled up replica set feedback-app-5d9fd97bf to 3 from 2
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled down replica set feedback-app-c57ff98cf to 0 from 1
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled up replica set feedback-app-58c7fff6f9 to 1
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled down replica set feedback-app-5d9fd97bf to 2 from 3
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled up replica set feedback-app-58c7fff6f9 to 2 from 1
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled down replica set feedback-app-5d9fd97bf to 1 from 2
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled up replica set feedback-app-58c7fff6f9 to 3 from 2
+  Normal  ScalingReplicaSet  11h   deployment-controller  Scaled down replica set feedback-app-5d9fd97bf to 0 from 1
+  Normal  ScalingReplicaSet  10h   deployment-controller  Scaled down replica set feedback-app-58c7fff6f9 to 2 from 3
+  Normal  ScalingReplicaSet  10h   deployment-controller  Scaled up replica set feedback-app-58c7fff6f9 to 4 from 2
+  Normal  ScalingReplicaSet  10h   deployment-controller  Scaled up replica set feedback-app-58c7fff6f9 to 7 from 4
+  Normal  ScalingReplicaSet  10h   deployment-controller  Scaled down replica set feedback-app-58c7fff6f9 to 5 from 7
+  Normal  ScalingReplicaSet  10h   deployment-controller  Scaled down replica set feedback-app-58c7fff6f9 to 3 from 5
+  Normal  ScalingReplicaSet  10h   deployment-controller  Scaled down replica set feedback-app-58c7fff6f9 to 2 from 3
+
+=== SERVICE DETAILS ===
+Name:                     feedback-service
+Namespace:                feedback-system
+Labels:                   app=feedback-app
+Annotations:              <none>
+Selector:                 app=feedback-app
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.102.249.72
+IPs:                      10.102.249.72
+Port:                     <unset>  80/TCP
+TargetPort:               3000/TCP
+NodePort:                 <unset>  30080/TCP
+Endpoints:                10.244.0.42:3000,10.244.0.44:3000
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+
