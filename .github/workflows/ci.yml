@@ -68,13 +68,33 @@ jobs:
         cache-to: type=gha,mode=max
         load: true
         platforms: linux/amd64
+      continue-on-error: false
     
     - name: Test Docker image
       run: |
         set -e
-        docker run -d -p 3000:3000 --name test-container feedback-app:latest || true
+        echo "Starting container..."
+        CONTAINER_ID=$(docker run -d -p 3000:3000 --name test-container feedback-app:latest)
+        if [ -z "$CONTAINER_ID" ]; then
+          echo "❌ Failed to start container"
+          docker ps -a
+          exit 1
+        fi
+        echo "Container started: $CONTAINER_ID"
+        echo "Waiting for container to be ready..."
         sleep 15
-        curl --retry 10 --retry-delay 3 --retry-connrefused --fail http://localhost:3000/health || (docker logs test-container && exit 1)
+        echo "Testing health endpoint..."
+        if ! curl --retry 10 --retry-delay 3 --retry-connrefused --fail http://localhost:3000/health; then
+          echo "❌ Health check failed"
+          echo "Container logs:"
+          docker logs test-container
+          echo "Container status:"
+          docker ps -a | grep test-container
+          docker stop test-container || true
+          docker rm test-container || true
+          exit 1
+        fi
+        echo "✅ Health check passed"
         docker stop test-container || true
         docker rm test-container || true
     
