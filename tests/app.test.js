@@ -13,6 +13,20 @@ describe('Feedback Management System - Integration Tests', () => {
     });
   });
 
+  describe('GET /metrics', () => {
+    it('should return prometheus metrics in text format', async () => {
+      // generate a couple of requests to change counters
+      await request(app).get('/health');
+      await request(app).get('/api/feedback');
+
+      const res = await request(app).get('/metrics');
+      expect(res.statusCode).toBe(200);
+      expect(res.headers['content-type']).toContain('text/plain');
+      expect(res.text).toMatch(/http_requests_total \d+/);
+      expect(res.text).toMatch(/feedbacks_total \d+/);
+    });
+  });
+
   describe('GET /api/feedback', () => {
     it('should return feedback array with success flag', async () => {
       const res = await request(app).get('/api/feedback');
@@ -123,6 +137,20 @@ describe('Feedback Management System - Integration Tests', () => {
       expect(res.statusCode).toBe(404);
       expect(res.body).toHaveProperty('success', false);
       expect(res.body).toHaveProperty('message', 'Route not found');
+    });
+  });
+
+  describe('Error handler', () => {
+    // Inject a test-only route to trigger the error middleware
+    app.get('/error-trigger', () => {
+      throw new Error('Boom');
+    });
+
+    it('should return 500 when an error is thrown', async () => {
+      const res = await request(app).get('/error-trigger');
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toHaveProperty('success', false);
+      expect(res.body).toHaveProperty('message', 'Internal server error');
     });
   });
 });
