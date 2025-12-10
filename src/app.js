@@ -1,10 +1,19 @@
 const express = require('express');
+const path = require('path');
 const { trackRequest, trackFeedback, getMetrics } = require('./metrics');
 
 const app = express();
 
 // Middleware
 app.use(express.json());
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve index.html at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 // Track all requests
 app.use((req, res, next) => {
