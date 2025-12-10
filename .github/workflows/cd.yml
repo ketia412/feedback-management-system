@@ -12,6 +12,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     env:
       IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/feedback-app
@@ -21,10 +22,25 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-
+    
+    - name: Validate Docker Hub secrets
+      run: |
+        if [ -z "${{ secrets.DOCKER_USERNAME }}" ]; then
+          echo "❌ Error: DOCKER_USERNAME secret is not set"
+          echo "Please set DOCKER_USERNAME in GitHub repository settings > Secrets and variables > Actions"
+          exit 1
+        fi
+        if [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
+          echo "❌ Error: DOCKER_PASSWORD secret is not set"
+          echo "Please set DOCKER_PASSWORD in GitHub repository settings > Secrets and variables > Actions"
+          echo "DOCKER_PASSWORD must be a Docker Hub Access Token with WRITE permissions"
+          exit 1
+        fi
+        echo "✅ Docker Hub secrets are configured"
+    
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-
+    
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
@@ -55,11 +71,13 @@ jobs:
         platforms: linux/amd64
 
     - name: Set up kubectl
+      if: ${{ secrets.KUBE_CONFIG_DATA != '' }}
       uses: azure/setup-kubectl@v4
       with:
         version: 'latest'
 
     - name: Configure kubeconfig
+      if: ${{ secrets.KUBE_CONFIG_DATA != '' }}
       env:
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
       run: |
@@ -67,9 +85,18 @@ jobs:
         echo "$KUBE_CONFIG_DATA" | base64 -d > $HOME/.kube/config
 
     - name: Apply manifests
+      if: ${{ secrets.KUBE_CONFIG_DATA != '' }}
       run: kubectl apply -f k8s/ -n $K8S_NAMESPACE
 
     - name: Set image to current commit
+      if: ${{ secrets.KUBE_CONFIG_DATA != '' }}
       run: |
         kubectl set image deployment/feedback-app feedback-app=$IMAGE_NAME:$IMAGE_TAG -n $K8S_NAMESPACE
         kubectl rollout status deployment/feedback-app -n $K8S_NAMESPACE
+    
+    - name: Kubernetes deployment skipped
+      if: ${{ secrets.KUBE_CONFIG_DATA == '' }}
+      run: |
+        echo "⚠️ Kubernetes deployment skipped - KUBE_CONFIG_DATA secret not configured"
+        echo "Docker image has been built and pushed successfully"
+        echo "To enable Kubernetes deployment, set KUBE_CONFIG_DATA secret in repository settings"
