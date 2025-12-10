@@ -28,3 +28,5 @@ build/
 # Coverage
 coverage/
 .nyc_output/minikube-linux-amd64
+
+minikube-linux-amd64
